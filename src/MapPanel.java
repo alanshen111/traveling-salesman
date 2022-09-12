@@ -4,10 +4,8 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.LinkedList;
+import java.util.*;
 import java.util.List;
-import java.util.Queue;
 
 public class MapPanel extends JPanel {
 
@@ -44,19 +42,19 @@ public class MapPanel extends JPanel {
 
     public MapPanel() {
 
-        cityList.add(new City(new Point(VICTORIA_X,VICTORIA_Y)));
-        cityList.add(new City(new Point(EDMONTON_X,EDMONTON_Y)));
-        cityList.add(new City(new Point(REGINA_X,REGINA_Y)));
-        cityList.add(new City(new Point(WINNIPEG_X,WINNIPEG_Y)));
-        cityList.add(new City(new Point(TORONTO_X,TORONTO_Y)));
-        cityList.add(new City(new Point(QUEBEC_CITY_X,QUEBEC_CITY_Y)));
-        cityList.add(new City(new Point(FREDERICTON_X,FREDERICTON_Y)));
-        cityList.add(new City(new Point(CHARLOTTETOWN_X,CHARLOTTETOWN_Y)));
-        cityList.add(new City(new Point(HALIFAX_X,HALIFAX_Y)));
-        cityList.add(new City(new Point(SAINT_JOHNS_X,SAINT_JOHNS_Y)));
-        cityList.add(new City(new Point(WHITEHORSE_X,WHITEHORSE_Y)));
-        cityList.add(new City(new Point(YELLOWKNIFE_X,YELLOWKNIFE_Y)));
-        cityList.add(new City(new Point(IQALUIT_X,IQALUIT_Y)));
+        cityList.add(new City(new Point(VICTORIA_X,VICTORIA_Y), "Victoria"));
+        cityList.add(new City(new Point(EDMONTON_X,EDMONTON_Y), "Edmonton"));
+        cityList.add(new City(new Point(REGINA_X,REGINA_Y), "Regina"));
+        cityList.add(new City(new Point(WINNIPEG_X,WINNIPEG_Y), "Winnipeg"));
+        cityList.add(new City(new Point(TORONTO_X,TORONTO_Y), "Toronto"));
+        cityList.add(new City(new Point(QUEBEC_CITY_X,QUEBEC_CITY_Y), "Quebec City"));
+        cityList.add(new City(new Point(FREDERICTON_X,FREDERICTON_Y), "Fredericton"));
+        cityList.add(new City(new Point(CHARLOTTETOWN_X,CHARLOTTETOWN_Y), "Charlottetown"));
+        cityList.add(new City(new Point(HALIFAX_X,HALIFAX_Y), "Halifax"));
+        cityList.add(new City(new Point(SAINT_JOHNS_X,SAINT_JOHNS_Y), "Saint John's"));
+        cityList.add(new City(new Point(WHITEHORSE_X,WHITEHORSE_Y), "Whitehorse"));
+        cityList.add(new City(new Point(YELLOWKNIFE_X,YELLOWKNIFE_Y), "Yellowknife"));
+        cityList.add(new City(new Point(IQALUIT_X,IQALUIT_Y), "Iqaluit"));
         cityMatrix = new double[cityList.size()][cityList.size()];
 
         for (int i = 0; i < cityMatrix.length; i++) {
@@ -68,7 +66,7 @@ public class MapPanel extends JPanel {
     }
 
     private double getDistance(Point a, Point b) {
-        return Math.sqrt(Math.pow((a.x - b.x),2) + Math.pow((a.y + b.y),2));
+        return Math.sqrt(Math.pow((a.x - b.x),2) + Math.pow((a.y - b.y),2));
     }
 
     private int getNearestUnvisited(int i) throws Exception {
@@ -76,11 +74,12 @@ public class MapPanel extends JPanel {
         int minIndex = -1;
         for (int j = 0; j < cityMatrix[i].length; j++) {
             if (cityMatrix[i][j] < min && !cityList.get(j).isVisited()) {
+                min = cityMatrix[i][j];
                 minIndex = j;
             }
         }
         if (minIndex == -1) {
-            throw new Exception("Exception message");
+            throw new Exception("There is no nearest unvisited City.");
         }
         return minIndex;
     }
@@ -91,10 +90,13 @@ public class MapPanel extends JPanel {
 
         int current = 0;
         cityList.get(0).setVisited(true);
-        for (int i = 0; i < cityList.size(); i++) {
+        paintQueue.add(cityList.get(0));
+        for (int i = 0; i < cityList.size()-1; i++) {
             try {
                 paintQueue.add(cityList.get(getNearestUnvisited(current)));
+                System.out.println(cityList.get(getNearestUnvisited(current)).getName());
                 current = getNearestUnvisited(current);
+                cityList.get(current).setVisited(true);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -116,12 +118,18 @@ public class MapPanel extends JPanel {
         }
 
         for (City city: cityList) {
-            Color c = city.isVisited() ? Color.green : Color.red;
+            Color c = Color.red;
             this.g.setColor(c);
             this.g.fillOval(city.getPoint().x, city.getPoint().y, 15, 15);
         }
 
-
+        if (!paintQueue.isEmpty()) {
+            City city = paintQueue.poll();
+            city.setVisited(true);
+            this.g.setColor(Color.green);
+            this.g.fillOval(city.getPoint().x, city.getPoint().y, 15, 15);
+            repaint();
+        }
 
     }
 

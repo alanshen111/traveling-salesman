@@ -3,10 +3,12 @@ import java.awt.*;
 public class City {
 
     private boolean visited = false;
-    private Point point;
+    private final Point point;
+    private final String name;
 
-    public City(Point point) {
+    public City(Point point, String name) {
         this.point = point;
+        this.name = name;
     }
 
     public Point getPoint() {
@@ -21,4 +23,7 @@ public class City {
         this.visited = visited;
     }
 
+    public String getName() {
+        return name;
+    }
 }
