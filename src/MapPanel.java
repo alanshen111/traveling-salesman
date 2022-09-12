@@ -1,0 +1,133 @@
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+
+public class MapPanel extends JPanel {
+
+    // approximated from https://www.mobilefish.com/services/record_mouse_coordinates/record_mouse_coordinates.php
+    private static final int VICTORIA_X = 139;
+    private static final int VICTORIA_Y = 515;
+    private static final int EDMONTON_X = 211;
+    private static final int EDMONTON_Y = 481;
+    private static final int REGINA_X = 262;
+    private static final int REGINA_Y = 510;
+    private static final int WINNIPEG_X = 305;
+    private static final int WINNIPEG_Y = 514;
+    private static final int TORONTO_X = 397;
+    private static final int TORONTO_Y = 561;
+    private static final int QUEBEC_CITY_X = 426;
+    private static final int QUEBEC_CITY_Y = 542;
+    private static final int FREDERICTON_X = 447;
+    private static final int FREDERICTON_Y = 545;
+    private static final int CHARLOTTETOWN_X = 463;
+    private static final int CHARLOTTETOWN_Y = 547;
+    private static final int HALIFAX_X = 469;
+    private static final int HALIFAX_Y = 559;
+    private static final int SAINT_JOHNS_X = 511;
+    private static final int SAINT_JOHNS_Y = 535;
+    private static final int WHITEHORSE_X = 135;
+    private static final int WHITEHORSE_Y = 417;
+    private static final int YELLOWKNIFE_X = 240;
+    private static final int YELLOWKNIFE_Y = 400;
+    private static final int IQALUIT_X = 443;
+    private static final int IQALUIT_Y = 401;
+    private final List<City> cityList = new ArrayList<>();
+    private final double[][] cityMatrix;
+    private Graphics g;
+
+    public MapPanel() {
+
+        cityList.add(new City(new Point(VICTORIA_X,VICTORIA_Y)));
+        cityList.add(new City(new Point(EDMONTON_X,EDMONTON_Y)));
+        cityList.add(new City(new Point(REGINA_X,REGINA_Y)));
+        cityList.add(new City(new Point(WINNIPEG_X,WINNIPEG_Y)));
+        cityList.add(new City(new Point(TORONTO_X,TORONTO_Y)));
+        cityList.add(new City(new Point(QUEBEC_CITY_X,QUEBEC_CITY_Y)));
+        cityList.add(new City(new Point(FREDERICTON_X,FREDERICTON_Y)));
+        cityList.add(new City(new Point(CHARLOTTETOWN_X,CHARLOTTETOWN_Y)));
+        cityList.add(new City(new Point(HALIFAX_X,HALIFAX_Y)));
+        cityList.add(new City(new Point(SAINT_JOHNS_X,SAINT_JOHNS_Y)));
+        cityList.add(new City(new Point(WHITEHORSE_X,WHITEHORSE_Y)));
+        cityList.add(new City(new Point(YELLOWKNIFE_X,YELLOWKNIFE_Y)));
+        cityList.add(new City(new Point(IQALUIT_X,IQALUIT_Y)));
+        cityMatrix = new double[cityList.size()][cityList.size()];
+
+        for (int i = 0; i < cityMatrix.length; i++) {
+            for (int j = 0; j < cityMatrix[i].length; j++) {
+                cityMatrix[i][j] = getDistance(cityList.get(i).getPoint(),cityList.get(j).getPoint());
+            }
+        }
+
+    }
+
+    private double getDistance(Point a, Point b) {
+        return Math.sqrt(Math.pow((a.x - b.x),2) + Math.pow((a.y + b.y),2));
+    }
+
+    private int getNearestUnvisited(int i) throws Exception {
+        double min = Double.MAX_VALUE;
+        int minIndex = -1;
+        for (int j = 0; j < cityMatrix[i].length; j++) {
+            if (cityMatrix[i][j] < min && !cityList.get(j).isVisited()) {
+                minIndex = j;
+            }
+        }
+        if (minIndex == -1) {
+            throw new Exception("Exception message");
+        }
+        return minIndex;
+    }
+
+    Queue<City> paintQueue = new LinkedList<>();
+
+    public void paintGreedy() {
+
+        int current = 0;
+        cityList.get(0).setVisited(true);
+        for (int i = 0; i < cityList.size(); i++) {
+            try {
+                paintQueue.add(cityList.get(getNearestUnvisited(current)));
+                current = getNearestUnvisited(current);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+
+    @Override
+    public void paintComponent (Graphics g) {
+        super.paintComponent(g);
+        Graphics2D g2d = (Graphics2D) g.create();
+        this.g = g2d;
+        try {
+            BufferedImage image = ImageIO.read(new File("src/map.jpg"));
+            Image img = image.getScaledInstance(610,610, Image.SCALE_SMOOTH);
+            this.g.drawImage(img, 0, 0, this);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        for (City city: cityList) {
+            Color c = city.isVisited() ? Color.green : Color.red;
+            this.g.setColor(c);
+            this.g.fillOval(city.getPoint().x, city.getPoint().y, 15, 15);
+        }
+
+
+
+    }
+
+    public List<City> getCityList() {
+        return cityList;
+    }
+
+}
+
