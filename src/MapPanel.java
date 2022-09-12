@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.util.*;
 import java.util.List;
 
+import static java.lang.Thread.sleep;
+
 public class MapPanel extends JPanel {
 
     // approximated from https://www.mobilefish.com/services/record_mouse_coordinates/record_mouse_coordinates.php
@@ -63,6 +65,8 @@ public class MapPanel extends JPanel {
             }
         }
 
+        cityList.get(0).setVisited(true);
+
     }
 
     private double getDistance(Point a, Point b) {
@@ -87,21 +91,23 @@ public class MapPanel extends JPanel {
     Queue<City> paintQueue = new LinkedList<>();
 
     public void paintGreedy() {
-
         int current = 0;
-        cityList.get(0).setVisited(true);
         paintQueue.add(cityList.get(0));
         for (int i = 0; i < cityList.size()-1; i++) {
             try {
                 paintQueue.add(cityList.get(getNearestUnvisited(current)));
-                System.out.println(cityList.get(getNearestUnvisited(current)).getName());
                 current = getNearestUnvisited(current);
                 cityList.get(current).setVisited(true);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
+    }
 
+    private void reset() {
+        for (City city: cityList) {
+            if (!city.getName().equals("Victoria")) city.setVisited(false);
+        }
     }
 
     @Override
@@ -118,17 +124,20 @@ public class MapPanel extends JPanel {
         }
 
         for (City city: cityList) {
-            Color c = Color.red;
+            Color c = city.getName().equals("Victoria") ? Color.green : Color.red;
             this.g.setColor(c);
             this.g.fillOval(city.getPoint().x, city.getPoint().y, 15, 15);
         }
 
         if (!paintQueue.isEmpty()) {
             City city = paintQueue.poll();
+            System.out.println(city.getName());
             city.setVisited(true);
             this.g.setColor(Color.green);
             this.g.fillOval(city.getPoint().x, city.getPoint().y, 15, 15);
             repaint();
+        } else {
+            reset();
         }
 
     }
