@@ -41,6 +41,9 @@ public class MapPanel extends JPanel {
     private final List<City> cityList = new ArrayList<>();
     private final double[][] cityMatrix;
     private Graphics g;
+    private final Queue<City> paintQueue = new LinkedList<>();
+    private final Queue<Line> lineQueue = new LinkedList<>();
+    private final List<Line> lineList = new LinkedList<>();
 
     public MapPanel() {
 
@@ -88,15 +91,17 @@ public class MapPanel extends JPanel {
         return minIndex;
     }
 
-    Queue<City> paintQueue = new LinkedList<>();
+
 
     public void paintGreedy() {
         int current = 0;
         paintQueue.add(cityList.get(0));
         for (int i = 0; i < cityList.size()-1; i++) {
             try {
-                paintQueue.add(cityList.get(getNearestUnvisited(current)));
-                current = getNearestUnvisited(current);
+                int nearest = getNearestUnvisited(current);
+                paintQueue.add(cityList.get(nearest));
+                lineQueue.add(new Line(cityList.get(current).getPoint(), cityList.get(nearest).getPoint()));
+                current = nearest;
                 cityList.get(current).setVisited(true);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -108,6 +113,7 @@ public class MapPanel extends JPanel {
         for (City city: cityList) {
             if (!city.getName().equals("Victoria")) city.setVisited(false);
         }
+        lineList.clear();
     }
 
     @Override
@@ -129,12 +135,20 @@ public class MapPanel extends JPanel {
             this.g.fillOval(city.getPoint().x, city.getPoint().y, 15, 15);
         }
 
+        for (Line line: lineList) {
+            this.g.setColor(Color.red);
+            this.g.drawLine(line.getA().x,line.getA().y,line.getB().x,line.getB().y);
+        }
+
         if (!paintQueue.isEmpty()) {
             City city = paintQueue.poll();
-            System.out.println(city.getName());
             city.setVisited(true);
             this.g.setColor(Color.green);
             this.g.fillOval(city.getPoint().x, city.getPoint().y, 15, 15);
+            if (!lineQueue.isEmpty()){
+                Line line = lineQueue.poll();
+                lineList.add(line);
+            }
             repaint();
         } else {
             reset();
